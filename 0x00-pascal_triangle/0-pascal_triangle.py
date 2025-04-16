@@ -1,8 +1,8 @@
 #!/usr/bin/python3
-
 """
 This module implements Pascal's Triangle.
 """
+
 
 def pascal_triangle(n):
     """
