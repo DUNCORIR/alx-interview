@@ -1,4 +1,21 @@
 #!/usr/bin/python3
+"""
+This script reads log lines from stdin,
+processes each line to extract information about
+status codes and file sizes, and prints statistics periodically.
+
+The input format is expected to be:
+<IP Address> - [<date>] "GET /projects/260 HTTP/1.1" <status code> <file size>
+
+- After every 10 lines and/or when interrupted by CTRL + C,
+it prints the following statistics:
+    1. Total file size: The sum of all file sizes encountered so far.
+    2. Number of lines by status code: The count of occurrences
+    for specific status codes.
+
+- Status codes considered are: 200, 301, 400, 401, 403, 404, 405, 500.
+- Any line not matching the expected format will be ignored.
+"""
 import sys
 import signal
 
