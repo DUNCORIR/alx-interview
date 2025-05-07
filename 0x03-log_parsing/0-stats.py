@@ -49,7 +49,9 @@ def signal_handler(sig, frame):
 
 
 def process_line(line):
-    """Process a single line to update the total size and status code counts."""
+    """Process a single line to update the total
+    size and status code counts.
+    """
     global total_size
     parts = line.strip().split()
 
@@ -58,7 +60,7 @@ def process_line(line):
         return
 
     try:
-        status_code = int(parts[-2])  # The second-to-last part is the status code
+        status_code = int(parts[-2])  # Second-to-last part is the status code
         file_size = int(parts[-1])    # The last part is the file size
 
         # Check if the status code is valid
