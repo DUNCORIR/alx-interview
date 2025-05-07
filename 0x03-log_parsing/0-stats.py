@@ -27,10 +27,19 @@ line_count = 0
 
 def print_stats():
     """Prints the current statistics."""
-    print("File size: {}".format(total_size))
+    print_file_size()
+    print_status_codes()
+
+
+def print_file_size():
+    """Print the total file size."""
+    print(f"File size: {total_size}")
+
+
+def print_status_codes():
+    """Print the number of occurrences for each status code."""
     for code in sorted(status_codes.keys()):
-        if status_codes[code] > 0:
-            print("{}: {}".format(code, status_codes[code]))
+        print(f"{code}: {status_codes[code]}")
 
 
 def signal_handler(sig, frame):
@@ -39,38 +48,50 @@ def signal_handler(sig, frame):
     sys.exit(0)
 
 
-signal.signal(signal.SIGINT, signal_handler)
+def process_line(line):
+    """Process a single line to update the total size and status code counts."""
+    global total_size
+    parts = line.strip().split()
 
-try:
+    # Skip lines that don't have enough parts or are in an invalid format
+    if len(parts) < 7:
+        return
+
+    try:
+        status_code = int(parts[-2])  # The second-to-last part is the status code
+        file_size = int(parts[-1])    # The last part is the file size
+
+        # Check if the status code is valid
+        if status_code in status_codes:
+            status_codes[status_code] += 1
+        total_size += file_size
+
+    except ValueError:
+        return  # Skip lines where file_size or status_code is not an integer
+
+
+def read_input():
+    """Read input from stdin line by line."""
+    global line_count
     for line in sys.stdin:
-        parts = line.strip().split()
-
-        # Skip lines that don't have enough parts or are in an invalid format
-        if len(parts) < 7:
-            continue
-
-        # Extract the status code and file size from the line
-        try:
-            # The second-to-last part is the status code
-            status_code = int(parts[-2])
-            file_size = int(parts[-1])    # The last part is the file size
-
-            # Check if the status code is valid
-            if status_code in status_codes:
-                status_codes[status_code] += 1
-            total_size += file_size
-
-        except ValueError:
-            # Skip lines where file_size or status_code is not an integer
-            continue
-
+        process_line(line)
         line_count += 1
 
         # Print stats every 10 lines
         if line_count % 10 == 0:
             print_stats()
 
-except KeyboardInterrupt:
-    # Handle graceful exit when interrupted
-    print_stats()
-    sys.exit(0)
+
+def main():
+    """Main function to set up signal handling and initiate log parsing."""
+    signal.signal(signal.SIGINT, signal_handler)
+    try:
+        read_input()
+    except KeyboardInterrupt:
+        # Handle graceful exit when interrupted
+        print_stats()
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
