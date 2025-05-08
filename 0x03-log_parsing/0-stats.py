@@ -18,82 +18,56 @@ it prints the following statistics:
 """
 import sys
 import signal
+import re
 
-# Initialize metrics
-total_size = 0
-status_codes = {200: 0, 301: 0, 400: 0, 401: 0, 403: 0, 404: 0, 405: 0, 500: 0}
-line_count = 0
+
+# Valid status codes to track
+VALID_STATUS_CODES = ['200', '301', '400', '401', '403', '404', '405', '500']
+
+# Initialize counters
+total_file_size = 0
+status_code_counts = {}
+line_counter = 0
+
+# Precompiled regex pattern to match expected log format
+log_pattern = re.compile(r'.+ "GET /projects/260 HTTP/1.1" (\d{3}) (\d+)$')
 
 
 def print_stats():
-    """Prints the current statistics."""
-    print_file_size()
-    print_status_codes()
+    """Prints the total file size and sorted status code counts"""
+    print("File size: {}".format(total_file_size))
+    for code in sorted(status_code_counts.keys(), key=int):
+        print("{}: {}".format(code, status_code_counts[code]))
 
 
-def print_file_size():
-    """Print the total file size."""
-    print(f"File size: {total_size}")
-
-
-def print_status_codes():
-    """Print the number of occurrences for each status code."""
-    for code in sorted(status_codes.keys()):
-        print(f"{code}: {status_codes[code]}")
-
-
-def signal_handler(sig, frame):
-    """Handles keyboard interruption (CTRL + C)."""
-    print_stats()
-    sys.exit(0)
-
-
-def process_line(line):
-    """Process a single line to update the total
-    size and status code counts.
-    """
-    global total_size
-    parts = line.strip().split()
-
-    # Skip lines that don't have enough parts or are in an invalid format
-    if len(parts) < 7:
-        return
-
-    try:
-        status_code = int(parts[-2])  # Second-to-last part is the status code
-        file_size = int(parts[-1])    # The last part is the file size
-
-        # Check if the status code is valid
-        if status_code in status_codes:
-            status_codes[status_code] += 1
-        total_size += file_size
-
-    except ValueError:
-        return  # Skip lines where file_size or status_code is not an integer
-
-
-def read_input():
-    """Read input from stdin line by line."""
-    global line_count
+try:
     for line in sys.stdin:
-        process_line(line)
-        line_count += 1
+        line = line.strip()
+        match = log_pattern.match(line)
+        if not match:
+            continue  # Skip invalid lines
 
-        # Print stats every 10 lines
-        if line_count % 10 == 0:
+        status_code, file_size_str = match.groups()
+
+        try:
+            file_size = int(file_size_str)
+        except ValueError:
+            continue  # Skip lines with non-integer file size
+
+        total_file_size += file_size
+
+        if status_code in VALID_STATUS_CODES:
+            status_code_counts[status_code] = (
+                status_code_counts.get(status_code, 0) + 1
+            )
+
+        line_counter += 1
+        if line_counter % 10 == 0:
             print_stats()
 
+except KeyboardInterrupt:
+    print_stats()
+    raise
 
-def main():
-    """Main function to set up signal handling and initiate log parsing."""
-    signal.signal(signal.SIGINT, signal_handler)
-    try:
-        read_input()
-    except KeyboardInterrupt:
-        # Handle graceful exit when interrupted
-        print_stats()
-        sys.exit(0)
-
-
-if __name__ == "__main__":
-    main()
+finally:
+    print_stats()
