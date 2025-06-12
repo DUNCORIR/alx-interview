@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""" Script to calculate the number of ways to make change
+"""" Script to calculate the fewest number of coins needed
 for a given amount using a set of coin denominations.
 """
 
@@ -19,10 +19,9 @@ def makeChange(coins, total):
     if total <= 0:
         return 0
     # Initialize a list to store the minimum number of coins.
-    dp = [0] * (total + 1)
+    dp = [float('inf')] * (total + 1)
     dp[0] = 0  # Base case: 0 coins needed to make change for 0 amount
     for i in range(1, total + 1):
-        dp[i] = float('inf')  # Set initial value to infinity
         # Iterate through each coin denomination
         for coin in coins:
             if i - coin >= 0:  # Check if the coin can be used
