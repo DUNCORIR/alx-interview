@@ -1,4 +1,4 @@
-#!/usr/bin/pythonn3
+#!/usr/bin/python3
 """ The script simulates Prime Game
 Maria and Ben play a game over x rounds. In each round,
 they pick primes ≤ n and remove them and their multiples.
